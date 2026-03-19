@@ -44,7 +44,7 @@ Para que tudo isso aconteça, o projeto utiliza uma arquitetura moderna baseada 
 | Componente | Papel no Ecossistema |
 | :---- | :---- |
 | **Agente (Watchdog)** | O vigia que detecta quando o Avid Media Composer salva arquivos. |
-| **Cérebro (FastAPI)** | Recebe os alertas do Agente e distribui para o resto do sistema. |
+| **Cérebro (Flask)** | Recebe os alertas do Agente e distribui para o resto do sistema. |
 | **Memória Flash (Redis)** | Garante que o status "Ocupado/Livre" apareça na tela em tempo real. |
 | **Arquivo (PostgreSQL)** | Guarda todo o histórico para relatórios de produtividade e auditoria. |
 | **IA (Scikit-Learn)** | Calcula o tempo que falta para o editor terminar o trabalho. |
@@ -57,7 +57,7 @@ O sistema baseia-se em uma arquitetura orientada a eventos, onde a detecção de
 | Camada | Tecnologia | Justificativa Técnica |
 | :---- | :---- | :---- |
 | **Coleta (Agente)** | Python (Watchdog) | Monitoramento leve de eventos do SO (criação/edição) sem sobrecarga de storage. |
-| **Backend (API)** | FastAPI | Alta performance assíncrona, ideal para WebSockets e documentação automática. |
+| **Backend (API)** | Flask | Alta performance assíncrona, ideal para WebSockets e documentação automática. |
 | **Mensageria/Cache** | Redis | Intermediário ultrarrápido para estados transitórios (Livre/Ocupado) em memória. |
 | **Banco de Dados** | PostgreSQL | Persistência de dados históricos para auditoria e treinamento de modelos. |
 | **Inteligência (IA)** | Scikit-Learn / Pandas | Predição de tempo de conclusão (ETC) com base em regressão histórica. |
@@ -66,8 +66,22 @@ O sistema baseia-se em uma arquitetura orientada a eventos, onde a detecção de
 
 ## **2\. Estrutura de Diretórios**
 
-| projeto-globo-residencia/  ├── docker-compose.yml         \# Orquestração de todos os containers  ├── agent/                     \# Script de monitoramento (executado nos terminais)  │   └── monitor.py               ├── backend/                   \# API FastAPI e lógica de negócio  │   ├── main.py  │   └── database.py  ├── data\_ia/                   \# Scripts de ETL e Modelos de Machine Learning  │   ├── etl\_process.py  │   └── predictor.py  ├── frontend/                  \# Interface do Dashboard  │   └── app.py  └── redis\_config/              \# Configurações de persistência e instâncias do Redis |
-| :---- |
+```plaintext
+| projeto-globo-residencia/  
+├── docker-compose.yml         \# Orquestração de todos os containers
+├── agent/                     \# Script de monitoramento (executado nos terminais)  
+│   └── monitor.py               
+├── backend/                   \# API Flask e lógica de negócio  
+│   ├── main.py  
+│   └── database.py  
+├── data\_ia/                   \# Scripts de ETL e Modelos de Machine Learning  
+│   ├── etl\_process.py  
+│   └── predictor.py  
+├── frontend/                  \# Interface do Dashboard  
+│   └── app.py  
+├── redis\_config/              \# Configurações de persistência e instâncias do Redis 
+├── postgres/ 
+```
 
 ---
 
@@ -117,7 +131,7 @@ Python
 | **Redis** | Estado momentâneo (Agora) |
 | **PostgreSQL** | Histórico e Auditoria (Passado) |
 | **Scikit-Learn** | Inteligência e Previsão (Futuro) |
-| **FastAPI** | Orquestração e Lógica |
+| **Flask** | Orquestração e Lógica |
 | **Watchdog** | Gatilho de eventos |
 
 ---
