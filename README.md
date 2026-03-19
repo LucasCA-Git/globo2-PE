@@ -67,21 +67,34 @@ O sistema baseia-se em uma arquitetura orientada a eventos, onde a detecção de
 ## **2\. Estrutura de Diretórios**
 
 ```plaintext
-| projeto-globo-residencia/  
-├── docker-compose.yml         \# Orquestração de todos os containers
-├── agent/                     \# Script de monitoramento (executado nos terminais)  
-│   └── monitor.py               
-├── backend/                   \# API Flask e lógica de negócio  
-│   ├── main.py  
-│   └── database.py  
-├── data\_ia/                   \# Scripts de ETL e Modelos de Machine Learning  
-│   ├── etl\_process.py  
-│   └── predictor.py  
-├── frontend/                  \# Interface do Dashboard  
-│   └── app.py  
-├── redis\_config/              \# Configurações de persistência e instâncias do Redis 
-├── postgres/ 
-```
+GLOBO2-PE
+│
+├── docker-compose.yml
+├── .env
+│
+├── agent/                # Watchdog (captura eventos)
+│   ├── monitor.py
+│   └── requirements.txt
+│
+├── backend/              # API Flask (cérebro)
+│   ├── main.py
+│   ├── database.py
+│   └── requirements.txt
+│
+├── data_ia/              # ETL + IA
+│   ├── etl_process.py
+│   ├── predictor.py
+│   └── requirements.txt
+│
+├── frontend/             # Dashboard
+│   ├── app.py
+│   └── requirements.txt
+│
+├── redis_config/
+│   └── redis.conf
+│
+└── postgres/
+    └── init.sql
 
 ---
 
