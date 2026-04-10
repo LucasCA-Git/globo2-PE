@@ -46,7 +46,7 @@ def get_dashboard():
                 "editor": "Ana Oliveira",
                 "avatar": "AO",
                 "ilha": "ILHA-04",
-                "status": "Ocupado",
+                "status": "Livre",
                 "projeto": "Globo Esporte - Gols",
                 "progresso": 67,
                 "inicio": "09:41",
@@ -59,7 +59,7 @@ def get_dashboard():
                 "editor": "Juliana Ferreira",
                 "avatar": "JF",
                 "ilha": "ILHA-06",
-                "status": "Ocupado",
+                "status": "Livre",
                 "projeto": "Bom Dia Brasil - Matéria",
                 "progresso": 86,
                 "inicio": "09:11",
@@ -69,26 +69,20 @@ def get_dashboard():
             }
         ],
         "ia": {
-            "proximaEntrega": {
-                "editor": "Juliana Ferreira",
-                "projeto": "Bom Dia Brasil - Matéria",
-                "horario": "10:21",
-                "restanteMin": 9
-            },
             "fila": [
                 {
                     "id": 1,
-                    "editor": "Juliana Ferreira",
-                    "projeto": "Bom Dia Brasil - Matéria",
-                    "horario": "10:21",
-                    "restanteMin": 9
+                    "editor": "João Silva",
+                    "projeto": "Jornal Nacional - Bloco 2",
+                    "horario": "10:36",
+                    "restanteMin": 24
                 },
                 {
                     "id": 2,
-                    "editor": "Ana Oliveira",
-                    "projeto": "Globo Esporte - Gols",
-                    "horario": "10:26",
-                    "restanteMin": 14
+                    "editor": "Maria Santos",
+                    "projeto": "Fantástico - VT Especial",
+                    "horario": "10:56",
+                    "restanteMin": 44
                 }
             ],
             "precisaoModelo": 94.2,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import SummaryCards from "@/components/SummaryCards";
 import TabsNav from "@/components/TabsNav";
+import FilterBar from "@/components/FilterBar";
 import EditorsGrid from "@/components/EditorsGrid";
 import AIPanel from "@/components/AIPanel";
 import ChartsSection from "@/components/ChartsSection";
@@ -13,18 +14,17 @@ export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [search, setSearch] = useState("");
+  const [editorFilter, setEditorFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   async function fetchDashboard() {
     try {
       setLoading(true);
       setError(null);
-
       const response = await fetch("http://127.0.0.1:5000/dashboard");
-
-      if (!response.ok) {
-        throw new Error("Erro ao buscar dados do dashboard.");
-      }
-
+      if (!response.ok) throw new Error("Erro ao buscar dados do dashboard.");
       const result: DashboardData = await response.json();
       setData(result);
     } catch (err) {
@@ -61,27 +61,60 @@ export default function HomePage() {
     );
   }
 
+  const ilhasFiltradas = data.ilhas.filter((ilha) => {
+    const matchSearch = ilha.projeto.toLowerCase().includes(search.toLowerCase());
+    const matchEditor = editorFilter ? ilha.editor === editorFilter : true;
+    const matchStatus = statusFilter ? ilha.status === statusFilter : true;
+    return matchSearch && matchEditor && matchStatus;
+  });
+
+  const showIlhas = activeTab === 0 || activeTab === 1;
+  const showCharts = activeTab === 0 || activeTab === 2;
+
   return (
     <main className="min-h-screen bg-black px-4 py-6 md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <Header
           atualizadoEm={data.atualizadoEm}
           statusSistema={data.statusSistema}
+          onRefresh={fetchDashboard}
         />
 
         <SummaryCards summary={data.summary} />
 
-        <TabsNav />
+        <TabsNav active={activeTab} onChange={setActiveTab} />
 
-        <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <EditorsGrid ilhas={data.ilhas} />
-          <AIPanel ia={data.ia} />
-        </section>
+        {showIlhas && (
+          <FilterBar
+            ilhas={data.ilhas}
+            search={search}
+            onSearch={setSearch}
+            editorFilter={editorFilter}
+            onEditorFilter={setEditorFilter}
+            statusFilter={statusFilter}
+            onStatusFilter={setStatusFilter}
+          />
+        )}
 
-        <ChartsSection
-          horasPorDia={data.horasPorDia}
-          atividadePorHora={data.atividadePorHora}
-        />
+        {showIlhas && (
+          <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+            <EditorsGrid ilhas={ilhasFiltradas} />
+            <AIPanel ia={data.ia} />
+          </section>
+        )}
+
+        {showCharts && (
+          <ChartsSection
+            horasPorDia={data.horasPorDia}
+            atividadePorHora={data.atividadePorHora}
+          />
+        )}
+
+        {activeTab === 3 && (
+          <div className="rounded-2xl border border-white/10 bg-slate-950 p-8 text-center text-slate-400">
+            Histórico em desenvolvimento
+          </div>
+        )}
       </div>
     </main>
   );

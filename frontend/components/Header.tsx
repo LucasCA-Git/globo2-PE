@@ -1,9 +1,10 @@
 type HeaderProps = {
   atualizadoEm: string;
   statusSistema: string;
+  onRefresh: () => void;
 };
 
-export default function Header({ atualizadoEm, statusSistema }: HeaderProps) {
+export default function Header({ atualizadoEm, statusSistema, onRefresh }: HeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-center md:justify-between">
       <div>
@@ -20,7 +21,7 @@ export default function Header({ atualizadoEm, statusSistema }: HeaderProps) {
 
       <div className="flex items-center gap-3">
         <span className="text-sm text-slate-400">Atualizado: {atualizadoEm}</span>
-        <button className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-500/40 hover:bg-slate-800">
+        <button onClick={onRefresh} className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-500/40 hover:bg-slate-800">
           Atualizar
         </button>
         <button className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-white hover:bg-slate-800">
