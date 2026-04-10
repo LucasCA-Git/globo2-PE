@@ -28,12 +28,6 @@ export type FilaEntrega = {
 };
 
 export type IAData = {
-  proximaEntrega: {
-    editor: string;
-    projeto: string;
-    horario: string;
-    restanteMin: number;
-  };
   fila: FilaEntrega[];
   precisaoModelo: number;
   dadosTreinamento: number;

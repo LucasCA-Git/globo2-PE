@@ -5,6 +5,7 @@ type Props = {
 };
 
 export default function AIPanel({ ia }: Props) {
+  const proxima = ia.fila.reduce((a, b) => a.restanteMin < b.restanteMin ? a : b, ia.fila[0]);
   return (
     <aside className="rounded-2xl border border-cyan-500/20 bg-slate-950 p-5 shadow-lg shadow-black/20">
       <div className="mb-5 flex items-center justify-between">
@@ -16,13 +17,13 @@ export default function AIPanel({ ia }: Props) {
 
       <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
         <p className="text-sm text-cyan-300">Próxima Entrega</p>
-        <h3 className="mt-2 text-lg font-semibold text-white">{ia.proximaEntrega.editor}</h3>
-        <p className="mt-1 text-sm text-slate-400">{ia.proximaEntrega.projeto}</p>
+        <h3 className="mt-2 text-lg font-semibold text-white">{proxima.editor}</h3>
+        <p className="mt-1 text-sm text-slate-400">{proxima.projeto}</p>
         <p className="mt-3 text-xl font-bold text-cyan-300">
-          {ia.proximaEntrega.horario}
+          {proxima.horario}
         </p>
         <p className="text-sm text-slate-400">
-          {ia.proximaEntrega.restanteMin} minutos restantes
+          {proxima.restanteMin} minutos restantes
         </p>
       </div>
 
