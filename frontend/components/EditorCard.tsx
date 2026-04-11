@@ -11,13 +11,15 @@ export default function EditorCard({ ilha }: Props) {
     <div className={`rounded-2xl border bg-slate-950 p-5 shadow-lg shadow-black/20 transition ${ocupado ? "border-white/10" : "border-emerald-500/20"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${ocupado ? "bg-slate-800" : "bg-emerald-900/40"}`}>
-            {ilha.avatar}
+          <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${ocupado ? "bg-slate-800" : "bg-slate-800/50"}`}>
+            {ocupado ? ilha.avatar : <span className="text-slate-600 text-lg">?</span>}
             <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${ocupado ? "bg-amber-400" : "bg-emerald-400"}`} />
           </div>
 
           <div className="min-w-0">
-            <h3 className="truncate font-semibold text-white">{ilha.editor}</h3>
+            <h3 className={`truncate font-semibold ${ocupado ? "text-white" : "text-slate-500 italic"}`}>
+              {ocupado ? ilha.editor : "Aguardando editor"}
+            </h3>
             <p className="text-sm text-slate-400">{ilha.ilha}</p>
           </div>
         </div>

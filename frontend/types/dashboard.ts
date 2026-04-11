@@ -7,8 +7,8 @@ export type Summary = {
 
 export type Ilha = {
   id: number;
-  editor: string;
-  avatar: string;
+  editor?: string;
+  avatar?: string;
   ilha: string;
   status: "Ocupado" | "Livre";
   projeto: string;
