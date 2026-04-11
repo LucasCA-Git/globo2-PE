@@ -38,8 +38,8 @@ export const dashboardData: DashboardData = {
     },
     {
       id: 3,
-      editor: "Ana Oliveira",
-      avatar: "AO",
+      editor: "",
+      avatar: "",
       ilha: "ILHA-04",
       status: "Livre",
       projeto: "",
@@ -51,8 +51,8 @@ export const dashboardData: DashboardData = {
     },
     {
       id: 4,
-      editor: "Juliana Ferreira",
-      avatar: "JF",
+      editor: "",
+      avatar: "",
       ilha: "ILHA-06",
       status: "Livre",
       projeto: "",
