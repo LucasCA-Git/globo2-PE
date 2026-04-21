@@ -11,5 +11,10 @@ app.register_blueprint(health_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(event_bp)
 
+@app.route("/")
+def home():
+    return {"message": "Backend rodando!"}
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", debug=True, port=5000)
