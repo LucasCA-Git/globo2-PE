@@ -15,11 +15,11 @@ elif command == "ps":
     os.system("docker ps")
 else:
     print("""
-Comandos disponíveis:
+Comandos disponíveis para linux:
 
-python manage.py up
-python manage.py down
-python manage.py destroy
-python manage.py logs
-python manage.py ps
+python3 docker.py up
+python3 docker.py down
+python3 docker.py destroy
+python3 docker.py logs
+python3 docker.py ps
 """)
