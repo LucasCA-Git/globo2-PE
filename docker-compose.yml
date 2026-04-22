@@ -3,7 +3,9 @@ version: "3.9"
 
 services:
   backend:
-    build: .
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: globo2-backend
     restart: always
     ports:
