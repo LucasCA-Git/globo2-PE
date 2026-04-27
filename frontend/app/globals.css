@@ -3,9 +3,12 @@
 @tailwind utilities;
 
 html,
-body {
+/* body {
   background: #000;
   color: white;
+} */
+body {
+  box-sizing: border-box
 }
 
 * {

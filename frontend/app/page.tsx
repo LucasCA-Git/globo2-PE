@@ -41,7 +41,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black px-4 py-6 md:px-8 flex items-center justify-center">
+      <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8 flex items-center justify-center">
         <p className="text-white text-lg">Carregando dados do backend...</p>
       </main>
     );
@@ -49,7 +49,7 @@ export default function HomePage() {
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-black px-4 py-6 md:px-8 flex flex-col items-center justify-center gap-4">
+      <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8 flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-lg">{error}</p>
         <button
           onClick={fetchDashboard}
@@ -72,7 +72,7 @@ export default function HomePage() {
   const showCharts = activeTab === 0 || activeTab === 2;
 
   return (
-    <main className="min-h-screen bg-black px-4 py-6 md:px-8">
+    <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <Header
           atualizadoEm={data.atualizadoEm}
