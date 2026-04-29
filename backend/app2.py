@@ -20,7 +20,9 @@ def buscar_ilha_no_banco(caminho):
     }
 
 def calcular_progresso(evento):
-    return 50  # exemplo
+
+     # exemplo
+    return 50 
 
 @app.route("/atualizar", methods=['PUT'])
 def transformar_evento_para_ilha():
