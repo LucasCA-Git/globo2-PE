@@ -24,18 +24,39 @@ export default function ChartsSection({
 }: Props) {
   return (
     <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-      <div className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">
+
+      {/* LINE CHART */}
+      <div className="
+        min-w-0 overflow-hidden rounded-2xl border p-5
+        border-[rgba(0,0,0,0.08)] dark:border-white/10
+        bg-white dark:bg-[#020617]
+      ">
+        <h2 className="
+          mb-4 text-lg font-semibold
+          text-slate-900 dark:text-[rgba(227,227,233,1)]
+        ">
           Horas Trabalhadas por Dia
         </h2>
 
         <div className="w-full min-w-0" style={{ height: 320 }}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={horasPorDia}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="label" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(200,200,200,0.3)"
+              />
+
+              <XAxis
+                dataKey="label"
+                stroke="rgba(120,120,120,1)"
+              />
+
+              <YAxis
+                stroke="rgba(120,120,120,1)"
+              />
+
               <Tooltip />
+
               <Line
                 type="monotone"
                 dataKey="valor"
@@ -47,18 +68,38 @@ export default function ChartsSection({
         </div>
       </div>
 
-      <div className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">
+      {/* BAR CHART */}
+      <div className="
+        min-w-0 overflow-hidden rounded-2xl border p-5
+        border-[rgba(0,0,0,0.08)] dark:border-white/10
+        bg-white dark:bg-[#020617]
+      ">
+        <h2 className="
+          mb-4 text-lg font-semibold
+          text-slate-900 dark:text-[rgba(227,227,233,1)]
+        ">
           Atividade por Hora
         </h2>
 
         <div className="w-full min-w-0" style={{ height: 320 }}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={atividadePorHora}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="label" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(200,200,200,0.3)"
+              />
+
+              <XAxis
+                dataKey="label"
+                stroke="rgba(120,120,120,1)"
+              />
+
+              <YAxis
+                stroke="rgba(120,120,120,1)"
+              />
+
               <Tooltip />
+
               <Bar
                 dataKey="valor"
                 fill="#22c55e"
