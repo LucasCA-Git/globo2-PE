@@ -17,12 +17,12 @@ export default function AIPanel({ ia }: Props) {
       bg-[rgba(245,245,245,1)] dark:bg-[#020617]
       p-5 shadow-lg shadow-black/10 dark:shadow-black/30
     ">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
         <h2 className="
-          text-xl font-semibold
+          text-lg font-semibold sm:text-xl
           text-slate-900 dark:text-[rgba(227,227,233,1)]
         ">
-          Inteligência Artificial
+          Inteligencia Artificial
         </h2>
 
         <span className="
@@ -43,7 +43,7 @@ export default function AIPanel({ ia }: Props) {
         p-4
       ">
         <p className="text-sm text-cyan-600 dark:text-cyan-300">
-          Próxima Entrega
+          Proxima Entrega
         </p>
 
         <h3 className="
@@ -79,14 +79,14 @@ export default function AIPanel({ ia }: Props) {
             <div
               key={item.id}
               className="
-                flex items-start justify-between
+                flex items-start justify-between gap-3
                 rounded-xl border
                 border-[rgba(0,0,0,0.06)] dark:border-white/5
                 bg-white dark:bg-[rgba(50,50,50,0.9)]
                 p-3
               "
             >
-              <div>
+              <div className="min-w-0">
                 <p className="
                   text-sm font-semibold
                   text-slate-900 dark:text-[rgba(227,227,233,1)]
@@ -94,12 +94,12 @@ export default function AIPanel({ ia }: Props) {
                   #{index + 1} {item.editor}
                 </p>
 
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                   {item.projeto}
                 </p>
               </div>
 
-              <div className="text-right">
+              <div className="shrink-0 text-right">
                 <p className="
                   font-semibold
                   text-slate-900 dark:text-[rgba(227,227,233,1)]
@@ -116,7 +116,7 @@ export default function AIPanel({ ia }: Props) {
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <div className="
           rounded-xl border
           border-[rgba(0,0,0,0.06)] dark:border-white/5
@@ -124,7 +124,7 @@ export default function AIPanel({ ia }: Props) {
           p-4
         ">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Precisão do Modelo
+            Precisao do Modelo
           </p>
 
           <p className="mt-1 text-2xl font-bold text-emerald-500">
@@ -146,7 +146,7 @@ export default function AIPanel({ ia }: Props) {
             mt-1 text-2xl font-bold
             text-slate-900 dark:text-[rgba(227,227,233,1)]
           ">
-            {ia.dadosTreinamento.toLocaleString("pt-BR")} sessões
+            {ia.dadosTreinamento.toLocaleString("pt-BR")} sessoes
           </p>
         </div>
       </div>

@@ -41,19 +41,27 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8 flex items-center justify-center">
-        <p className="text-white text-lg">Carregando dados do backend...</p>
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 py-6 md:px-8 flex items-center justify-center">
+        <p className="text-slate-700 dark:text-slate-200 text-lg">Carregando dados do backend...</p>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8 flex flex-col items-center justify-center gap-4">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 py-6 md:px-8 flex flex-col items-center justify-center gap-4">
         <p className="text-red-400 text-lg">{error}</p>
         <button
           onClick={fetchDashboard}
-          className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="
+            rounded-xl border border-slate-200/80 dark:border-white/10
+            bg-white/90 dark:bg-slate-900/70
+            px-4 py-2 text-sm font-medium
+            text-slate-700 dark:text-slate-200
+            shadow-sm backdrop-blur transition-all duration-200
+            hover:bg-slate-50 hover:text-slate-900
+            dark:hover:bg-slate-800/80 dark:hover:text-white
+          "
         >
           Tentar novamente
         </button>
@@ -72,7 +80,7 @@ export default function HomePage() {
   const showCharts = activeTab === 0 || activeTab === 2;
 
   return (
-    <main className="min-h-screen bg-white dark:bg-black px-4 py-6 md:px-8">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 py-6 md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <Header
           atualizadoEm={data.atualizadoEm}
