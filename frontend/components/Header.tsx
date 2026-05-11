@@ -96,10 +96,11 @@ export default function Header({ atualizadoEm, statusSistema, onRefresh }: Heade
 
         <button className={iconButton} type="button" aria-label="Configuracoes" title="Configuracoes">
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="12" cy="12" r="3" />
+            <circle cx="12" cy="12" r="3.2" />
             <path
               strokeLinecap="round"
-              d="M12 2.75v2.1M12 19.15v2.1M21.25 12h-2.1M4.85 12h-2.1M18.54 5.46l-1.48 1.48M6.94 17.06l-1.48 1.48M18.54 18.54l-1.48-1.48M6.94 6.94 5.46 5.46"
+              strokeLinejoin="round"
+              d="M12.22 2h-.44a2 2 0 0 0-1.96 1.61l-.2 1.03a7.98 7.98 0 0 0-1.76 1.02l-.97-.33a2 2 0 0 0-2.41.91l-.22.38a2 2 0 0 0 .28 2.32l.73.8a8.06 8.06 0 0 0 0 2.04l-.73.8a2 2 0 0 0-.28 2.32l.22.38a2 2 0 0 0 2.41.91l.97-.33a7.98 7.98 0 0 0 1.76 1.02l.2 1.03A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.96-1.61l.2-1.03a7.98 7.98 0 0 0 1.76-1.02l.97.33a2 2 0 0 0 2.41-.91l.22-.38a2 2 0 0 0-.28-2.32l-.73-.8a8.06 8.06 0 0 0 0-2.04l.73-.8a2 2 0 0 0 .28-2.32l-.22-.38a2 2 0 0 0-2.41-.91l-.97.33a7.98 7.98 0 0 0-1.76-1.02l-.2-1.03A2 2 0 0 0 12.22 2z"
             />
           </svg>
         </button>
