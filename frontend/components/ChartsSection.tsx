@@ -38,7 +38,7 @@ export default function ChartsSection({
           Horas Trabalhadas por Dia
         </h2>
 
-        <div className="w-full min-w-0" style={{ height: 320 }}>
+        <div className="h-64 w-full min-w-0 sm:h-72 md:h-80">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={horasPorDia}>
               <CartesianGrid
@@ -49,10 +49,14 @@ export default function ChartsSection({
               <XAxis
                 dataKey="label"
                 stroke="rgba(120,120,120,1)"
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
               />
 
               <YAxis
                 stroke="rgba(120,120,120,1)"
+                tick={{ fontSize: 12 }}
+                width={34}
               />
 
               <Tooltip />
@@ -81,7 +85,7 @@ export default function ChartsSection({
           Atividade por Hora
         </h2>
 
-        <div className="w-full min-w-0" style={{ height: 320 }}>
+        <div className="h-64 w-full min-w-0 sm:h-72 md:h-80">
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={atividadePorHora}>
               <CartesianGrid
@@ -92,10 +96,14 @@ export default function ChartsSection({
               <XAxis
                 dataKey="label"
                 stroke="rgba(120,120,120,1)"
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
               />
 
               <YAxis
                 stroke="rgba(120,120,120,1)"
+                tick={{ fontSize: 12 }}
+                width={34}
               />
 
               <Tooltip />
