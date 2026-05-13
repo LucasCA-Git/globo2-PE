@@ -16,7 +16,7 @@ def exporta_para_db(evento):
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO eventos (tipo, caminho , arquivo, diretorio, timestamp) VALUES (%s, %s, %s, %s, %f)",
+        "INSERT INTO eventos (tipo, caminho , arquivo, diretorio, timestamp) VALUES (%s, %s, %s, %s, %s)",
         (evento["tipo"], evento["caminho"], evento["arquivo"], evento["diretorio"], evento["timestamp"])
     )
 
