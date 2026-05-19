@@ -14,6 +14,306 @@ Tudo começa na estação de trabalho onde o **Avid Media Composer** está rodan
 * **Ação**: Sempre que o editor salva o projeto ou o Avid faz um backup automático, o Agente detecta essa movimentação no armazenamento (storage).  
 * **Diferencial**: O editor não precisa apertar nenhum botão extra; o monitoramento é feito por meio dos eventos do próprio sistema operacional.
 
+# Globo2-PE — Backend & Pipeline de Monitoramento
+
+> Sistema de monitoramento inteligente de ilhas de edição Avid Media Composer para a Globo PE.  
+> Detecta atividade em tempo real, persiste histórico e sinaliza conclusão de projetos automaticamente.
+
+---
+
+## Visão Geral
+
+```
+Avid salva arquivo na pasta do projeto
+           ↓
+   agent/monitor.py          ← Watchdog: detecta mudanças no SO
+           ↓  HTTP POST /events
+   backend/Flask             ← Recebe e distribui
+           ↓  RPUSH
+   Redis (fila)              ← Buffer de eventos em tempo real
+           ↓  BLPOP
+   backend/worker/worker.py  ← ETL: transforma e persiste
+           ↓
+   PostgreSQL                ← Histórico completo + status dos projetos
+```
+
+---
+
+## Convenção de Pastas
+
+O sistema interpreta o **nome da pasta** para identificar editor e projeto automaticamente.  
+O editor não precisa fazer nada além de trabalhar normalmente no Avid.
+
+```
+arquivos_teste/
+└── LUC ANIVERSARIO RECIFE/     ← "LUC" = código do editor, resto = nome do projeto
+    ├── video.avp               ← arquivo em edição → projeto "em_andamento"
+    └── final/
+        └── entrega.avp         ← qualquer arquivo aqui → projeto marcado como "concluido"
+```
+
+### Mapa de códigos de editor
+
+| Código | Editor |
+|--------|--------|
+| `LUC` | Lucas Cardoso Alecrim |
+| `SAM` / `SAMUEL` | Samuel Santos |
+| `JOA` | João Oliveira |
+| `ANA` | Ana Paula Ferreira |
+
+> Para adicionar novos editores, edite `USUARIO_MAP` em `agent/monitor.py`.
+
+---
+
+## Estrutura do Projeto
+
+```
+globo2-PE/
+├── start.sh                    # Sobe todo o ecossistema de uma vez
+├── stop.sh                     # Encerra tudo
+├── docker-compose.yml          # Orquestração dos containers
+├── docker.py                   # Helper para subir/derrubar o Compose
+│
+├── agent/
+│   ├── monitor.py              # Watchdog — monitora pasta e envia eventos ao backend
+│   ├── arquivos_teste/         # Pasta monitorada (simula o storage do Avid)
+│   └── requirements.txt
+│
+├── backend/
+│   ├── app.py                  # Flask — entry point da API
+│   ├── database.py             # Conexões lazy com Redis e PostgreSQL
+│   ├── routes/
+│   │   ├── event_routes.py     # POST /events, GET /events/status, GET /events/fila
+│   │   ├── dashboard_routes.py # GET /dashboard
+│   │   └── health_routes.py    # GET /health
+│   ├── worker/
+│   │   └── worker.py           # ETL — consome fila Redis e persiste no Postgres
+│   └── requirements.txt
+│
+└── data_ia/
+    └── etl_process.py          # ETL alternativo (referência / uso futuro pela IA)
+```
+
+---
+
+## Pré-requisitos
+
+- Docker + Docker Compose
+- Python 3.11+
+- `python-pipx` ou `python-venv` (para o agente local)
+
+---
+
+## Como Usar
+
+### 1. Subir tudo com um comando
+
+```bash
+chmod +x start.sh stop.sh   # apenas na primeira vez
+./start.sh
+```
+
+O script faz automaticamente:
+1. Sobe os containers Docker (Postgres + Redis + Backend)
+2. Aguarda o backend estar respondendo em `:5000`
+3. Inicia o Worker ETL dentro do container
+4. Cria o virtualenv do agente (só na primeira vez)
+5. Inicia o Watchdog em foreground (logs visíveis no terminal)
+
+### 2. Encerrar tudo
+
+```bash
+./stop.sh
+```
+
+---
+
+## Simular Atividade (Testes)
+
+```bash
+# Criar pasta de projeto e arquivo em edição
+mkdir -p agent/arquivos_teste/"LUC ANIVERSARIO RECIFE"
+touch agent/arquivos_teste/"LUC ANIVERSARIO RECIFE"/video.avp
+
+# Sinalizar conclusão do projeto (jogar qualquer arquivo na pasta /final/)
+mkdir -p agent/arquivos_teste/"LUC ANIVERSARIO RECIFE/final"
+touch agent/arquivos_teste/"LUC ANIVERSARIO RECIFE/final"/entrega.avp
+```
+
+---
+
+## Rotas da API
+
+### `GET /health`
+Verifica se o backend está no ar.
+
+```json
+{ "status": "ok", "message": "Backend funcionando corretamente" }
+```
+
+---
+
+### `POST /events`
+Recebe eventos do Watchdog. Corpo esperado:
+
+```json
+{
+  "tipoEvento": "created",
+  "arquivo":    "video.avp",
+  "caminho":    "/abs/path/LUC ANIVERSARIO RECIFE/video.avp",
+  "timestamp":  "2026-05-16 17:27:00",
+  "pasta":      "LUC ANIVERSARIO RECIFE",
+  "usuario":    "Lucas Cardoso Alecrim",
+  "projeto":    "ANIVERSARIO RECIFE"
+}
+```
+
+Resposta:
+```json
+{ "status": "ok", "message": "Evento enfileirado com sucesso", "fila": 1 }
+```
+
+---
+
+### `GET /events/status`
+Retorna o estado **em tempo real** de todos os editores (via Redis).
+
+```json
+{
+  "total": 2,
+  "editores": [
+    {
+      "status":      "ocupado",
+      "editor":      "Lucas Cardoso Alecrim",
+      "projeto":     "Aniversario Recife",
+      "arquivo":     "video.avp",
+      "ultimo_save": "2026-05-16 17:25:00",
+      "is_final":    "False"
+    },
+    {
+      "status":      "concluido",
+      "editor":      "Samuel Santos",
+      "projeto":     "Eu Lembro Am",
+      "arquivo":     "corte.avp",
+      "ultimo_save": "2026-05-16 17:27:17",
+      "is_final":    "True"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /events/fila`
+Retorna quantos eventos estão pendentes na fila do Redis (sem consumir).
+
+```json
+{ "fila": "eventos_watchdog", "tamanho": 3 }
+```
+
+---
+
+### `GET /dashboard`
+Retorna dados mockados do dashboard para desenvolvimento do frontend.
+
+---
+
+## Tabelas do PostgreSQL
+
+### `usuarios`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | SERIAL | PK |
+| `nome` | TEXT | Nome completo do editor |
+| `criado_em` | TIMESTAMPTZ | Data de criação |
+
+### `projetos`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | SERIAL | PK |
+| `nome` | TEXT | Nome do projeto |
+| `usuario_id` | INT | FK → usuarios |
+| `status` | TEXT | `em_andamento` ou `concluido` |
+| `concluido_em` | TIMESTAMPTZ | Preenchido quando cai na pasta `/final/` |
+| `criado_em` | TIMESTAMPTZ | Data de criação |
+
+### `eventos`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | SERIAL | PK |
+| `tipo` | TEXT | `created`, `modified`, `deleted`, `closed` |
+| `arquivo` | TEXT | Nome do arquivo |
+| `caminho` | TEXT | Caminho absoluto |
+| `pasta` | TEXT | Nome da pasta do projeto |
+| `is_final` | BOOLEAN | `true` se veio da subpasta `/final/` |
+| `usuario_id` | INT | FK → usuarios |
+| `projeto_id` | INT | FK → projetos |
+| `ocorrido_em` | TIMESTAMPTZ | Timestamp do evento |
+
+### `edicoes`
+Usada pela camada de IA para calcular o ETC (Estimated Time of Completion).
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | SERIAL | PK |
+| `editor` | TEXT | Nome do editor |
+| `arquivo` | TEXT | Arquivo sendo editado |
+| `projeto` | TEXT | Nome do projeto |
+| `inicio_edicao` | TIMESTAMPTZ | Primeiro evento detectado |
+| `fim_edicao` | TIMESTAMPTZ | Último evento (ou quando foi para `/final/`) |
+| `duracao_segundos` | INT | Calculado automaticamente |
+| `tamanho_arquivo_mb` | FLOAT | Para uso pelo modelo de IA |
+
+---
+
+## Consultas Úteis
+
+```bash
+# Ver status atual de todos os projetos
+docker exec globo2-postgres psql -U globo_user -d globo2_db -c "
+SELECT p.nome AS projeto, u.nome AS usuario, p.status, p.concluido_em
+FROM projetos p JOIN usuarios u ON u.id = p.usuario_id;"
+
+# Ver últimos eventos registrados
+docker exec globo2-postgres psql -U globo_user -d globo2_db -c "
+SELECT u.nome AS usuario, p.nome AS projeto, e.tipo, e.arquivo, e.is_final, e.ocorrido_em
+FROM eventos e
+JOIN usuarios u ON u.id = e.usuario_id
+JOIN projetos p ON p.id = e.projeto_id
+ORDER BY e.ocorrido_em DESC LIMIT 20;"
+
+# Ver fila Redis (eventos pendentes)
+docker exec globo2-redis redis-cli LLEN eventos_watchdog
+
+# Ver estado em tempo real dos editores
+docker exec globo2-redis redis-cli KEYS "editor:*"
+docker exec globo2-redis redis-cli HGETALL "editor:lucas_cardoso_alecrim"
+
+# Logs do worker ETL
+docker exec globo2-backend cat /tmp/worker.log
+
+# Logs do backend Flask
+docker logs globo2-backend
+```
+
+---
+
+## Variáveis de Ambiente
+
+Configuradas no `docker-compose.yml`:
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `DB_HOST` | `postgres` | Host do PostgreSQL |
+| `DB_PORT` | `5432` | Porta do PostgreSQL |
+| `DB_NAME` | `globo2_db` | Nome do banco |
+| `DB_USER` | `globo_user` | Usuário |
+| `DB_PASSWORD` | `123456` | Senha |
+| `REDIS_HOST` | `redis` | Host do Redis |
+| `REDIS_PORT` | `6379` | Porta do Redis |
+
+---
+
 ### **2\. Processamento Instantâneo (O Agora)**
 
 Assim que o Agente percebe uma mudança, ele envia um sinal para o **Coração do Sistema (API)**.

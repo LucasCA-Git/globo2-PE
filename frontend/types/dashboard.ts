@@ -7,16 +7,41 @@ export type Summary = {
 
 export type Ilha = {
   id: number;
+
   editor?: string;
   avatar?: string;
+
   ilha: string;
-  status: "Ocupado" | "Livre";
+
+  status:
+    | "Pronto para editar"
+    | "Editando"
+    | "Editado"
+    | "Gaveta"
+    | "Exibido"
+    | "Exportado"
+    | "Home Office"
+    | "Fora do Turno";
+
   projeto: string;
+
   progresso: number;
+
   inicio: string;
+
   arquivoGb: number;
+
   previsaoRestanteMin: number;
+
   previsaoFim: string;
+
+  editorTexto?: string;
+
+  reporter?: string;
+
+  carga?: number;
+
+  regional?: string;
 };
 
 export type FilaEntrega = {
@@ -47,3 +72,5 @@ export type DashboardData = {
   horasPorDia: ChartPoint[];
   atividadePorHora: ChartPoint[];
 };
+
+export type ViewMode = "gerente" | "gestor" | "publico";

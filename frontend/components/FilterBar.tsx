@@ -4,12 +4,18 @@ import { Ilha } from "@/types/dashboard";
 
 type Props = {
   ilhas: Ilha[];
+
   search: string;
   onSearch: (v: string) => void;
+
   editorFilter: string;
   onEditorFilter: (v: string) => void;
+
   statusFilter: string;
   onStatusFilter: (v: string) => void;
+
+  retrancaFilter: string;
+  onRetrancaFilter: (v: string) => void;
 };
 
 export default function FilterBar({
@@ -20,34 +26,63 @@ export default function FilterBar({
   onEditorFilter,
   statusFilter,
   onStatusFilter,
+  retrancaFilter,
+  onRetrancaFilter,
 }: Props) {
-  const editors = Array.from(new Set(ilhas.map((i) => i.editor)));
 
-  const inputStyle = `
-    h-10 rounded-lg border px-3 text-sm outline-none transition sm:px-4
-    border-[rgba(0,0,0,0.1)] dark:border-white/10
-    bg-[rgba(255,255,255,1)] dark:bg-[rgba(37,37,37,1)]
-    text-[rgba(30,30,30,1)] dark:text-[rgba(227,227,233,1)]
-    placeholder-[rgba(140,140,140,1)]
-    focus:border-cyan-500/50
-  `;
+  const editors = Array.from(
+    new Set(ilhas.map((i) => i.editor).filter(Boolean))
+  );
+
+  // Exibe: PROGRAMA - RETRANCA
+  const retrancas = Array.from(
+    new Set(
+      ilhas.map((i) => {
+        if (i.programa && i.retranca) {
+          return `${i.programa} - ${i.retranca}`;
+        }
+
+        return i.projeto;
+      })
+    )
+  );
 
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
+    <div className="flex flex-wrap gap-3">
+
       <input
         type="text"
         placeholder="Buscar projeto..."
         value={search}
         onChange={(e) => onSearch(e.target.value)}
-        className={`w-full md:min-w-[220px] md:flex-1 ${inputStyle}`}
+        className="flex-1 min-w-[220px] rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-500/50"
       />
+
+      <select
+        value={retrancaFilter}
+        onChange={(e) => onRetrancaFilter(e.target.value)}
+        className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
+      >
+        <option value="">
+          Todas as retrancas
+        </option>
+
+        {retrancas.map((retranca) => (
+          <option key={retranca} value={retranca}>
+            {retranca}
+          </option>
+        ))}
+      </select>
 
       <select
         value={editorFilter}
         onChange={(e) => onEditorFilter(e.target.value)}
-        className={`w-full md:min-w-[190px] md:w-auto ${inputStyle}`}
+        className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
       >
-        <option value="">Todos os editores</option>
+        <option value="">
+          Todos os editores
+        </option>
+
         {editors.map((e) => (
           <option key={e} value={e}>
             {e}
@@ -58,12 +93,45 @@ export default function FilterBar({
       <select
         value={statusFilter}
         onChange={(e) => onStatusFilter(e.target.value)}
-        className={`w-full md:min-w-[170px] md:w-auto ${inputStyle}`}
+        className="rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-cyan-500/50"
       >
-        <option value="">Todos os status</option>
-        <option value="Ocupado">Ocupado</option>
-        <option value="Livre">Livre</option>
+        <option value="">
+          Todos os status
+        </option>
+
+        <option value="Pronto para editar">
+          Pronto para editar
+        </option>
+
+        <option value="Editando">
+          Editando
+        </option>
+
+        <option value="Editado">
+          Editado
+        </option>
+
+        <option value="Gaveta">
+          Gaveta
+        </option>
+
+        <option value="Exibido">
+          Exibido
+        </option>
+
+        <option value="Exportado">
+          Exportado
+        </option>
+
+        <option value="Home Office">
+          Home Office
+        </option>
+
+        <option value="Fora do Turno">
+          Fora do Turno
+        </option>
       </select>
+
     </div>
   );
 }

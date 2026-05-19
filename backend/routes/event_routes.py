@@ -1,40 +1,73 @@
-# from flask import Blueprint, request, jsonify
-
-# event_bp = Blueprint("events", __name__)
-
-# @event_bp.route("/events", methods=["POST"])
-# def receive_event():
-#     data = request.get_json()
-
-#     print("Evento recebido do Watchdog:")
-#     print(data)
-
-#     return jsonify({
-#         "status": "ok",
-#         "message": "Evento recebido com sucesso",
-#         "data": data
-#     }), 200
-
-
-# Ela pega o payload recebido do Watchdog e salva no Redis usando a chave ultimo_evento.
-
 from flask import Blueprint, request, jsonify
 from database import redis_client
 import json
 
 event_bp = Blueprint("events", __name__)
 
+REDIS_QUEUE = "eventos_watchdog"   # fila FIFO consumida pelo worker
+
+
 @event_bp.route("/events", methods=["POST"])
 def receive_event():
     data = request.get_json()
 
-    redis_client.set("ultimo_evento", json.dumps(data))
+    if not data:
+        return jsonify({"status": "erro", "message": "Payload vazio"}), 400
 
-    print("Evento recebido do Watchdog:")
-    print(data)
+    # ── 1. Fila para o Worker ETL (persistência no Postgres) ──────────────────
+    redis_client.rpush(REDIS_QUEUE, json.dumps(data, ensure_ascii=False))
+
+    # ── 2. Estado em tempo real para o Dashboard (sobrescreve por editor) ─────
+    # Segue a estrutura do PDF: "editor:nome" com os dados atuais da ilha
+    usuario = data.get("usuario", "")
+    if usuario:
+        chave_estado = f"editor:{usuario.lower().replace(' ', '_')}"
+        redis_client.hset(chave_estado, mapping={
+            "status":         "ocupado",
+            "editor":         usuario,
+            "projeto":        data.get("projeto", ""),
+            "arquivo":        data.get("arquivo", ""),
+            "ultimo_save":    data.get("timestamp", ""),
+            "tipo_evento":    data.get("tipoEvento", ""),
+        })
+        redis_client.expire(chave_estado, 3600)   # expira em 1h sem atividade
+
+    fila_tamanho = redis_client.llen(REDIS_QUEUE)
+
+    print(f"[EVENT] {data.get('tipoEvento','?'):10} | {data.get('arquivo','?')}")
+    print(f"        usuario={usuario or '—'} | projeto={data.get('projeto','—')}")
+    print(f"        fila={fila_tamanho} item(s) pendentes")
 
     return jsonify({
-        "status": "ok",
-        "message": "Evento recebido com sucesso",
-        "data": data
+        "status":  "ok",
+        "message": "Evento enfileirado com sucesso",
+        "fila":    fila_tamanho,
+        "data":    data
+    }), 200
+
+
+@event_bp.route("/events/status", methods=["GET"])
+def status_editores():
+    """Retorna o estado atual de todos os editores (tempo real via Redis)."""
+    chaves = redis_client.keys("editor:*")
+    editores = []
+
+    for chave in chaves:
+        dados = redis_client.hgetall(chave)
+        if dados:
+            editores.append(dados)
+
+    return jsonify({
+        "total":    len(editores),
+        "editores": editores
+    }), 200
+
+
+@event_bp.route("/events/fila", methods=["GET"])
+def ver_fila():
+    """Retorna quantos eventos estão pendentes na fila (sem consumir)."""
+    tamanho = redis_client.llen(REDIS_QUEUE)
+    return jsonify({
+        "fila":    REDIS_QUEUE,
+        "tamanho": tamanho
     }), 200

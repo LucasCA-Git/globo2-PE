@@ -10,25 +10,12 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-def buscar_ilha_no_banco(caminho):
-    # EXEMPLO MOCK (simulação)
-    return {
-        "id": 1,
-        "editor": "João",
-        "avatar": "avatar.png",
-        "ilha": "Ilha 1"
-    }
-
-def calcular_progresso(evento):
-
-     # exemplo
-    return 50 
 
 @app.route("/atualizar", methods=['PUT'])
 def transformar_evento_para_ilha():
     evento = request.json
 
-    dados_db = buscar_ilha_no_banco(evento["caminho"])
+    dados_db = evento
 
     resposta = {
         "id": dados_db["id"],
@@ -37,7 +24,6 @@ def transformar_evento_para_ilha():
         "ilha": dados_db["ilha"],
         "status": "Ocupado",
         "projeto": evento["arquivo"],
-        "progresso": calcular_progresso(evento),
     }
 
     return jsonify(resposta)
