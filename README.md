@@ -396,6 +396,7 @@ GLOBO2-PE
 └── postgres/
     └── init.sql
 
+```
 ---
 
 ## **3\. Fluxo de Dados (Data Journey)**
@@ -423,17 +424,33 @@ O Redis é utilizado para gerenciar estados voláteis. Ao utilizar a estrutura d
 
 Diferente do Redis, o Postgres armazena a estrutura para análise de longo prazo.
 
-| CREATE TABLE edicoes (     id SERIAL PRIMARY KEY,     editor VARCHAR(100),     arquivo VARCHAR(255),     inicio\_edicao TIMESTAMP,     fim\_edicao TIMESTAMP,     duracao\_segundos INT  ); |
+| CREATE TABLE edicoes ( id SERIAL PRIMARY KEY, editor VARCHAR(100), arquivo VARCHAR(255), inicio\_edicao TIMESTAMP, fim\_edicao TIMESTAMP, duracao\_segundos INT ); |
 | :---- |
 
 ### **4.3 Scikit-Learn: Predição de Produtividade**
 
 O modelo de Machine Learning utiliza os dados do PostgreSQL para prever o tempo de entrega.
 
-Python
+```python
+import pandas as pd
+from sklearn.linear_model import LinearRegression
 
-| import pandas as pdfrom sklearn.linear\_model import LinearRegression\# Exemplo de lógica do predictor.pydef predict\_editing\_time(tamanho\_arquivo\_novo):    \# Dados extraídos do PostgreSQL    data \= pd.DataFrame({       "tamanho\_arquivo": \[500, 700, 300\],       "duracao": \[1500, 1800, 1200\]    })    X \= data\[\["tamanho\_arquivo"\]\]    y \= data\["duracao"\]    model \= LinearRegression()    model.fit(X, y)    return model.predict(\[\[tamanho\_arquivo\_novo\]\]) |
-| :---- |
+# Exemplo de lógica do predictor.py
+def predict_editing_time(tamanho_arquivo_novo):
+    # Dados extraídos do PostgreSQL
+    data = pd.DataFrame({
+       "tamanho_arquivo": [500, 700, 300],
+       "duracao": [1500, 1800, 1200]
+    })
+
+    X = data[["tamanho_arquivo"]]
+    y = data["duracao"]
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    return model.predict([[tamanho_arquivo_novo]])
+```
 
 ---
 
@@ -490,4 +507,3 @@ No painel visual do gestor, a IA converte dados frios em informações acionáve
 * **Com IA**: "Editor João: Ocupado. **Previsão de entrega: 15 minutos restantes**."
 
 ---
-
