@@ -424,8 +424,16 @@ O Redis é utilizado para gerenciar estados voláteis. Ao utilizar a estrutura d
 
 Diferente do Redis, o Postgres armazena a estrutura para análise de longo prazo.
 
-| CREATE TABLE edicoes ( id SERIAL PRIMARY KEY, editor VARCHAR(100), arquivo VARCHAR(255), inicio\_edicao TIMESTAMP, fim\_edicao TIMESTAMP, duracao\_segundos INT ); |
-| :---- |
+```sql
+CREATE TABLE edicoes (
+    id SERIAL PRIMARY KEY,
+    editor VARCHAR(100),
+    arquivo VARCHAR(255),
+    inicio_edicao TIMESTAMP,
+    fim_edicao TIMESTAMP,
+    duracao_segundos INT
+);
+```
 
 ### **4.3 Scikit-Learn: Predição de Produtividade**
 
