@@ -25,19 +25,20 @@ export default function HomePage() {
   // futuramente virá do login/backend
   const [viewMode] = useState<ViewMode>("gerente");
 
-  async function fetchDashboard() {
+  async function fetchDashboard(showLoading = false) {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setError(null);
 
-      const response = await fetch("http://127.0.0.1:5000/dashboard");
+      const response = await fetch("http://127.0.0.1:5000/dashboard", {
+        cache: "no-store",
+      });
 
       if (!response.ok) {
         throw new Error("Erro ao buscar dados do dashboard.");
       }
 
       const result: DashboardData = await response.json();
-
       setData(result);
     } catch (err) {
       setError("Não foi possível carregar os dados do backend.");
@@ -48,10 +49,18 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    fetchDashboard();
+    // primeira carga com tela de loading
+    fetchDashboard(true);
+
+    // polling silencioso a cada 3s
+    const interval = setInterval(() => {
+      fetchDashboard(false);
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-4 py-6 dark:bg-black md:px-6 2xl:px-8">
         <p className="text-lg text-white">
@@ -61,7 +70,7 @@ export default function HomePage() {
     );
   }
 
-  if (error || !data) {
+  if (error && !data) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-4 py-6 dark:bg-black md:px-6 2xl:px-8">
         <p className="text-lg text-red-400">
@@ -69,7 +78,7 @@ export default function HomePage() {
         </p>
 
         <button
-          onClick={fetchDashboard}
+          onClick={() => fetchDashboard(true)}
           className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm backdrop-blur transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/80 dark:hover:text-white"
         >
           Tentar novamente
@@ -77,6 +86,8 @@ export default function HomePage() {
       </main>
     );
   }
+
+  if (!data) return null;
 
   const isPublicView = viewMode === "publico";
   const isTeamView = viewMode === "gestor";
@@ -88,7 +99,6 @@ export default function HomePage() {
     : data.ilhas;
 
   const ilhasFiltradas = baseIlhas.filter((ilha) => {
-
     const matchSearch = ilha.projeto
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -101,19 +111,13 @@ export default function HomePage() {
       ? ilha.status === statusFilter
       : true;
 
-    const retrancaCompleta =
-      `${ilha.programa} - ${ilha.retranca}`;
+    const retrancaCompleta = `${ilha.programa} - ${ilha.retranca}`;
 
     const matchRetranca = retrancaFilter
       ? retrancaCompleta === retrancaFilter
       : true;
 
-    return (
-      matchSearch &&
-      matchEditor &&
-      matchStatus &&
-      matchRetranca
-    );
+    return matchSearch && matchEditor && matchStatus && matchRetranca;
   });
 
   const ilhasPublicas = ilhasFiltradas.map((ilha, index) => ({
@@ -124,9 +128,7 @@ export default function HomePage() {
     previsaoFim: "--:--",
   }));
 
-  const ilhasVisiveis = isPublicView
-    ? ilhasPublicas
-    : ilhasFiltradas;
+  const ilhasVisiveis = isPublicView ? ilhasPublicas : ilhasFiltradas;
 
   const showIlhas = activeTab === 0 || activeTab === 1;
   const showCharts = activeTab === 0 || activeTab === 2;
@@ -139,7 +141,7 @@ export default function HomePage() {
         <Header
           atualizadoEm={data.atualizadoEm}
           statusSistema={data.statusSistema}
-          onRefresh={fetchDashboard}
+          onRefresh={() => fetchDashboard(false)}
         />
 
         <SummaryCards summary={data.summary} />
@@ -174,7 +176,6 @@ export default function HomePage() {
                 : "xl:grid-cols-[5fr_1.2fr]"
             }`}
           >
-
             <EditorsGrid ilhas={ilhasVisiveis} />
 
             {!isPublicView && (
@@ -182,7 +183,6 @@ export default function HomePage() {
                 <AIPanel ia={data.ia} />
               </div>
             )}
-
           </section>
         )}
 
