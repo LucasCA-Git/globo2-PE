@@ -18,24 +18,24 @@ def receive_event():
     redis_client.rpush(REDIS_QUEUE, json.dumps(data, ensure_ascii=False))
 
     # ── 2. Estado em tempo real para o Dashboard (sobrescreve por editor) ─────
-    # Segue a estrutura do PDF: "editor:nome" com os dados atuais da ilha
     usuario = data.get("usuario", "")
     if usuario:
         chave_estado = f"editor:{usuario.lower().replace(' ', '_')}"
         redis_client.hset(chave_estado, mapping={
-            "status":         "ocupado",
-            "editor":         usuario,
-            "projeto":        data.get("projeto", ""),
-            "arquivo":        data.get("arquivo", ""),
-            "ultimo_save":    data.get("timestamp", ""),
-            "tipo_evento":    data.get("tipoEvento", ""),
+            "status":      data.get("status", "ocupado"),  
+            "editor":      usuario,
+            "ilha":        data.get("ilha", ""),
+            "projeto":     data.get("projeto", ""),
+            "arquivo":     data.get("arquivo", ""),
+            "ultimo_save": data.get("timestamp", ""),
+            "tipo_evento": data.get("tipoEvento", ""),
         })
         redis_client.expire(chave_estado, 3600)   # expira em 1h sem atividade
 
     fila_tamanho = redis_client.llen(REDIS_QUEUE)
 
     print(f"[EVENT] {data.get('tipoEvento','?'):10} | {data.get('arquivo','?')}")
-    print(f"        usuario={usuario or '—'} | projeto={data.get('projeto','—')}")
+    print(f"        ilha={data.get('ilha','—')} | usuario={usuario or '—'} | projeto={data.get('projeto','—')}")
     print(f"        fila={fila_tamanho} item(s) pendentes")
 
     return jsonify({
