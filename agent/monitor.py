@@ -68,10 +68,15 @@ def extrair_info_pasta(caminho_arquivo: str) -> dict:
     # Usuário / projeto
     # ─────────────────────────────────────────────
 
-    tokens = pasta_editor.split()
-    codigo = tokens[0].upper() if len(tokens) > 0 else ""
+    partes_pasta = pasta_editor.split(" - ", 1)
+    if len(partes_pasta) == 2:
+        projeto = partes_pasta[0].strip()
+        codigo  = partes_pasta[1].strip().upper()
+    else:
+        tokens  = pasta_editor.split()
+        codigo  = tokens[0].upper() if tokens else ""
+        projeto = " ".join(tokens[1:]) if len(tokens) > 1 else ""
     usuario = resolver_usuario(codigo)
-    projeto = " ".join(tokens[1:]) if len(tokens) > 1 else ""
 
     return {
         "pasta": pasta_editor,

@@ -3,11 +3,11 @@
 # Importado pelo monitor.py e por qualquer outro módulo que precise.
 #
 # Convenção do nome de pasta:
-#   <CÓDIGO> <NOME DO PROJETO...>
-#   ex: "LUC ANIVERSARIO RECIFE" → Lucas Cardoso Alecrim | projeto: ANIVERSARIO RECIFE
+#   <NOME DO PROJETO> - <CÓDIGO>
+#   ex: "ANIVERSARIO RECIFE - LUC" → Lucas Cardoso Alecrim | projeto: ANIVERSARIO RECIFE
 #
 # Para adicionar um editor novo:
-#   1. Descubra o código usado na pasta (primeiro token, maiúsculo)
+#   1. Descubra o código usado na pasta (token após " - ", maiúsculo)
 #   2. Adicione uma linha aqui: "CODIGO": "Nome Completo"
 #   3. Salve — o monitor.py já vai usar automaticamente
 

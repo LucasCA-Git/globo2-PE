@@ -45,15 +45,19 @@ def extrair_info_pasta(caminho_arquivo: str) -> dict:
         # arquivo está direto na raiz — sem contexto de projeto
         return {}
 
-    pasta_nome = partes[0]            # "LUC ANIVERSARIO RECIFE"
-    tokens     = pasta_nome.split()   # ["LUC", "ANIVERSARIO", "RECIFE"]
+    pasta_nome = partes[0]
 
-    if not tokens:
-        return {}
-
-    codigo  = tokens[0].upper()
-    usuario = USUARIO_MAP.get(codigo, codigo)          # fallback: próprio código
-    projeto = " ".join(tokens[1:]) if len(tokens) > 1 else ""
+    partes_pasta = pasta_nome.split(" - ", 1)
+    if len(partes_pasta) == 2:
+        projeto = partes_pasta[0].strip()
+        codigo  = partes_pasta[1].strip().upper()
+    else:
+        tokens  = pasta_nome.split()
+        if not tokens:
+            return {}
+        codigo  = tokens[0].upper()
+        projeto = " ".join(tokens[1:]) if len(tokens) > 1 else ""
+    usuario = USUARIO_MAP.get(codigo, codigo)
 
     return {
         "pasta":   pasta_nome,
