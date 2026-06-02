@@ -8,6 +8,7 @@ from watchdog.events import FileSystemEventHandler
 from usuario_map import resolver_usuario
 
 BACKEND_URL = "http://127.0.0.1:5000/events"
+
 PASTA_MONITORADA = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "arquivos_teste"
@@ -15,6 +16,18 @@ PASTA_MONITORADA = os.path.join(
 
 
 def extrair_info_pasta(caminho_arquivo: str) -> dict:
+    """
+    Estrutura esperada:
+
+    ANIVERSARIO RECIFE LUC I9
+    ├── arquivo.mp4
+    └── timeline/
+        └── render.avb
+
+    projeto = ANIVERSARIO RECIFE
+    codigo  = LUC
+    ilha    = I9 -> ILHA-09
+    """
 
     abs_monitorada = os.path.abspath(PASTA_MONITORADA)
     abs_arquivo = os.path.abspath(caminho_arquivo)
@@ -22,10 +35,9 @@ def extrair_info_pasta(caminho_arquivo: str) -> dict:
     try:
         rel = os.path.relpath(abs_arquivo, abs_monitorada)
         partes = rel.split(os.sep)
+
     except ValueError:
         return {}
-
-    print(f"[DEBUG] partes={partes}")
 
     if len(partes) < 2:
         return {
@@ -36,50 +48,64 @@ def extrair_info_pasta(caminho_arquivo: str) -> dict:
             "concluido": False,
         }
 
-    pasta_ilha = partes[0]
-    pasta_editor = partes[1]
+    pasta_nome = partes[0]
 
-    # ─────────────────────────────────────────────
-    # Detecta concluído
-    # ─────────────────────────────────────────────
+    tokens = pasta_nome.split()
 
-    pasta_base = os.path.join(abs_monitorada, pasta_ilha, pasta_editor)
-    pasta_final = os.path.join(pasta_base, "final")
+    if len(tokens) < 3:
+        return {
+            "ilha": "",
+            "usuario": "",
+            "projeto": "",
+            "pasta": pasta_nome,
+            "concluido": False,
+        }
+
+    codigo = tokens[-2].upper()
+    ilha_raw = tokens[-1].upper()
+
+    projeto = " ".join(tokens[:-2])
+
+    usuario = resolver_usuario(codigo)
+
+    # I9 -> ILHA-09
+    if ilha_raw.startswith("I"):
+        numero = ilha_raw[1:]
+
+        if numero.isdigit():
+            ilha = f"ILHA-{numero.zfill(2)}"
+        else:
+            ilha = ilha_raw
+    else:
+        ilha = ilha_raw
+
+    # Verifica se existe algo na pasta timeline para considerar como concluído
+    pasta_timeline = os.path.join(
+        abs_monitorada,
+        pasta_nome,
+        "timeline"
+    )
+
     concluido = False
 
-    if os.path.exists(pasta_final):
+    if os.path.isdir(pasta_timeline):
         try:
-            arquivos_final = [
-                f for f in os.listdir(pasta_final)
-                if os.path.isfile(os.path.join(pasta_final, f))
+            arquivos_timeline = [
+                arquivo
+                for arquivo in os.listdir(pasta_timeline)
+                if os.path.isfile(
+                    os.path.join(pasta_timeline, arquivo)
+                )
             ]
-            concluido = len(arquivos_final) > 0
+
+            # tem arquivo na pasta timeline = concluido
+            concluido = len(arquivos_timeline) > 0
+
         except Exception:
             concluido = False
 
-    # ─────────────────────────────────────────────
-    # Normaliza ilha
-    # ─────────────────────────────────────────────
-
-    ilha_num = pasta_ilha.lower().replace("ilha", "").strip()
-    ilha = f"ILHA-{ilha_num}" if ilha_num.isdigit() else pasta_ilha.upper()
-
-    # ─────────────────────────────────────────────
-    # Usuário / projeto
-    # ─────────────────────────────────────────────
-
-    partes_pasta = pasta_editor.split(" - ", 1)
-    if len(partes_pasta) == 2:
-        projeto = partes_pasta[0].strip()
-        codigo  = partes_pasta[1].strip().upper()
-    else:
-        tokens  = pasta_editor.split()
-        codigo  = tokens[0].upper() if tokens else ""
-        projeto = " ".join(tokens[1:]) if len(tokens) > 1 else ""
-    usuario = resolver_usuario(codigo)
-
     return {
-        "pasta": pasta_editor,
+        "pasta": pasta_nome,
         "ilha": ilha,
         "usuario": usuario,
         "projeto": projeto,
@@ -94,47 +120,108 @@ class MonitorHandler(FileSystemEventHandler):
         self.intervalo = 1
 
     def evento_duplicado(self, event):
-        chave = (event.event_type, event.src_path)
+
+        chave = (
+            event.event_type,
+            getattr(event, "dest_path", None) or event.src_path
+        )
+
         agora = time.time()
+
         if chave in self.ultimos_eventos:
             if agora - self.ultimos_eventos[chave] < self.intervalo:
                 return True
+
         self.ultimos_eventos[chave] = agora
         return False
 
     def processar_evento(self, event):
 
-        if event.is_directory:
-            return
-
         if not event.src_path:
             return
 
-        abs_monitorada = os.path.abspath(PASTA_MONITORADA)
+        caminho_evento = (
+            getattr(event, "dest_path", None)
+            or event.src_path
+        )
 
-        # Pega o caminho relevante antes da guarda
-        caminho_evento = getattr(event, "dest_path", None) or event.src_path
-        abs_evento = os.path.abspath(caminho_evento)
+        # Permite eventos da pasta timeline, mas ignora eventos de outras pastas ocultas
+        if event.is_directory:
 
-        # Ignora eventos fora da pasta monitorada
-        if not abs_evento.startswith(abs_monitorada):
+            nome_dir = os.path.basename(
+                caminho_evento
+            ).lower()
+
+            if nome_dir != "timeline":
+                return
+
+        # Se houve evento dentro da pasta timeline,
+        # força recálculo do status do projeto
+
+        caminho_normalizado = caminho_evento.replace(
+            "\\",
+            "/"
+        )
+
+        if "/timeline/" in caminho_normalizado:
+
+            pasta_final = os.path.dirname(
+                caminho_evento
+            )
+
+            if os.path.basename(
+                pasta_final
+            ).lower() == "timeline":
+
+                pasta_projeto = os.path.dirname(
+                    pasta_final
+                )
+
+                caminho_evento = os.path.join(
+                    pasta_projeto,
+                    "__status_check__"
+                )
+
+                # Aguarda o SO atualizar o disco antes de ler a pasta
+                time.sleep(0.3)
+
+        abs_monitorada = os.path.abspath(
+            PASTA_MONITORADA
+        )
+
+        abs_evento = os.path.abspath(
+            caminho_evento
+        )
+
+        if not abs_evento.startswith(
+            abs_monitorada
+        ):
             return
 
         if self.evento_duplicado(event):
             return
 
-        print(f"[EVENTO] {event.event_type} -> {caminho_evento}")
+        info = extrair_info_pasta(
+            caminho_evento
+        )
 
-        info = extrair_info_pasta(caminho_evento)
-
-        status = "concluido" if info.get("concluido") else "ocupado"
+        status = (
+            "concluido"
+            if info.get("concluido")
+            else "ocupado"
+        )
 
         payload = {
             "tipoEvento": event.event_type,
-            "arquivo": os.path.basename(caminho_evento),
+            "arquivo": os.path.basename(
+                getattr(event, "dest_path", None)
+                or event.src_path
+            ),
             "caminho": abs_evento,
             "diretorio": event.is_directory,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": time.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
             "pasta": info.get("pasta", ""),
             "ilha": info.get("ilha", ""),
             "usuario": info.get("usuario", ""),
@@ -142,22 +229,29 @@ class MonitorHandler(FileSystemEventHandler):
             "status": status,
         }
 
-        print(f"[DEBUG] payload={payload}")
-
         try:
-            response = requests.post(BACKEND_URL, json=payload, timeout=5)
+
+            response = requests.post(
+                BACKEND_URL,
+                json=payload,
+                timeout=5
+            )
 
             print(
                 f"[OK] {payload['tipoEvento'].upper():10} | "
                 f"{payload['arquivo']}"
             )
+
             print(
                 f"     ilha={payload['ilha']} | "
                 f"usuario={payload['usuario']} | "
                 f"projeto={payload['projeto']} | "
                 f"status={payload['status']}"
             )
-            print(f"     backend={response.status_code}")
+
+            print(
+                f"     backend={response.status_code}"
+            )
 
         except requests.RequestException as e:
             print(f"[ERRO] {e}")
@@ -168,21 +262,42 @@ class MonitorHandler(FileSystemEventHandler):
 
 if __name__ == "__main__":
 
-    os.makedirs(PASTA_MONITORADA, exist_ok=True)
+    os.makedirs(
+        PASTA_MONITORADA,
+        exist_ok=True
+    )
 
     handler = MonitorHandler()
+
     observer = Observer()
-    observer.schedule(handler, PASTA_MONITORADA, recursive=True)
+
+    observer.schedule(
+        handler,
+        PASTA_MONITORADA,
+        recursive=True
+    )
+
     observer.start()
 
-    print(f"[WATCHDOG] Monitorando: {os.path.abspath(PASTA_MONITORADA)}")
-    print(f"[WATCHDOG] Backend: {BACKEND_URL}\n")
+    print(
+        f"[WATCHDOG] Monitorando: "
+        f"{os.path.abspath(PASTA_MONITORADA)}"
+    )
+
+    print(
+        f"[WATCHDOG] Backend: {BACKEND_URL}\n"
+    )
 
     try:
         while True:
             time.sleep(1)
+
     except KeyboardInterrupt:
+
         observer.stop()
-        print("\n[WATCHDOG] Encerrado.")
+
+        print(
+            "\n[WATCHDOG] Encerrado."
+        )
 
     observer.join()
