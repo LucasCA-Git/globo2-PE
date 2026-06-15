@@ -84,37 +84,48 @@ class Monitorar(FileSystemEventHandler):
         return False
 
     def processar_evento(self, event):
-        if event.is_directory:
-            return
 
         if self.evento_duplicado(event):
             return
 
-        # ── campos originais ──────────────────────────────────────────────────
+        nome = os.path.basename(event.src_path).lower()
+
+        if event.is_directory:
+            tipo_objeto = "PASTA"
+        elif nome.endswith(".avb"):
+            tipo_objeto = "ARQUIVO AVB"
+        elif nome.endswith(".avp"):
+            tipo_objeto = "ARQUIVO AVP"
+        else:
+            tipo_objeto = "ARQUIVO"
+
         evento = {
-            "tipo":      event.event_type,
-            "caminho":   event.src_path,
-            "arquivo":   os.path.basename(event.src_path),
+            "tipo": event.event_type,
+            "tipo_objeto": tipo_objeto,
+            "caminho": event.src_path,
+            "arquivo": os.path.basename(event.src_path),
             "diretorio": event.is_directory,
             "timestamp": datetime.utcnow().isoformat(),
         }
-
-        # ── campos novos: pasta → usuário + projeto ───────────────────────────
         info = extrair_info_pasta(event.src_path)
+
         if info:
-            evento["pasta"]   = info["pasta"]
+            evento["pasta"] = info["pasta"]
             evento["usuario"] = info["usuario"]
             evento["projeto"] = info["projeto"]
         else:
-            evento["pasta"]   = ""
+            evento["pasta"] = ""
             evento["usuario"] = ""
             evento["projeto"] = ""
 
-        redis_client.rpush("eventos_watchdog", json.dumps(evento, ensure_ascii=False))
+        redis_client.rpush(
+            "eventos_watchdog",
+            json.dumps(evento, ensure_ascii=False)
+        )
 
         print(f"[{evento['tipo'].upper():10}] {evento['arquivo']}")
         if info:
-            print(f"             usuario={evento['usuario']} | projeto={evento['projeto']}")
+            print(f"usuario={evento['usuario']} | projeto={evento['projeto']}")
 
     def on_any_event(self, event):
         self.processar_evento(event)
