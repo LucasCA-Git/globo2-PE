@@ -13,15 +13,9 @@ export type Ilha = {
 
   ilha: string;
 
-  status:
-    | "Pronto para editar"
-    | "Editando"
-    | "Editado"
-    | "Gaveta"
-    | "Exibido"
-    | "Exportado"
-    | "Home Office"
-    | "Fora do Turno";
+  // Vocabulário real emitido pelo backend (routes/dashboard_routes.py),
+  // que apenas capitaliza o status vindo do agente ("ocupado" | "concluido").
+  status: "Ocupado" | "Concluido";
 
   projeto: string;
 

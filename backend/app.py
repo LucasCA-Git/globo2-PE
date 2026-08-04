@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+import os
+
+from flask import Flask
 from flask_cors import CORS
 
 from routes.health_routes import health_bp
@@ -28,41 +30,15 @@ def home():
     }
 
 # ─────────────────────────────────────────────
-# Atualização manual
-# ─────────────────────────────────────────────
-
-@app.route("/atualizar", methods=["PUT"])
-def transformar_evento_para_ilha():
-
-    evento = request.json
-
-    if not evento:
-        return jsonify({
-            "erro": "Payload vazio"
-        }), 400
-
-    resposta = {
-        "id": evento.get("id"),
-        "editor": evento.get("editor"),
-        "avatar": evento.get("avatar"),
-        "ilha": evento.get("ilha"),
-
-        # AQUI ESTAVA O BUG
-        "status": evento.get("status", "ocupado"),
-
-        "projeto": evento.get("arquivo"),
-    }
-
-    return jsonify(resposta)
-
-# ─────────────────────────────────────────────
 # Run
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
 
+    debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+
     app.run(
         host="0.0.0.0",
         port=5000,
-        debug=True
+        debug=debug
     )

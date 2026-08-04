@@ -45,6 +45,7 @@ def get_dashboard():
             "projeto":            projeto,
             "programa":           ed.get("programa", ""),
             "retranca":           ed.get("retranca", ""),
+            "regional":           ed.get("regional", ""),
             "progresso":          int(ed.get("progresso", 0)),
             "inicio":             ed.get("inicio", "--:--"),
             "arquivoGb":          round(float(ed.get("tamanho_mb", 0)) / 1024, 2),

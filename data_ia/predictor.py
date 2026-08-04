@@ -2,6 +2,9 @@
 data_ia/predictor.py
 Modelo de predição de tempo de conclusão (ETC) usando Scikit-Learn.
 Expõe uma API Flask mínima para ser chamada pelo backend.
+
+Fonte dos dados: tabela `edicoes`, criada e mantida por
+backend/worker/worker.py (ver README.md > "Tabelas do PostgreSQL").
 """
 
 import os
@@ -24,8 +27,15 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://globo:globo123@localhost:5432/media_compose")
-MODEL_PATH   = Path(os.getenv("MODEL_PATH", "/app/modelo_etc.pkl"))
+# Mesmas variáveis de ambiente usadas pelo backend/worker (docker-compose.yml).
+DATABASE_URL = os.getenv("DATABASE_URL") or (
+    f"host={os.getenv('DB_HOST', 'postgres')} "
+    f"port={os.getenv('DB_PORT', '5432')} "
+    f"dbname={os.getenv('DB_NAME', 'globo2_db')} "
+    f"user={os.getenv('DB_USER', 'globo_user')} "
+    f"password={os.getenv('DB_PASSWORD', '123456')}"
+)
+MODEL_PATH = Path(os.getenv("MODEL_PATH", "/app/modelo_etc.pkl"))
 
 app = Flask(__name__)
 
@@ -34,19 +44,19 @@ app = Flask(__name__)
 # ---------------------------------------------------------------------------
 
 def carregar_dados_treino(editor_nome: str = None) -> pd.DataFrame:
-    """Busca histórico de edições encerradas para treinar o modelo."""
+    """Busca histórico de edições encerradas (fim_edicao preenchido) para treinar o modelo."""
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         with conn.cursor() as cur:
             if editor_nome:
                 cur.execute(
                     """
-                    SELECT tamanho_arquivo_mb, duracao_segundos, editor_nome
+                    SELECT tamanho_arquivo_mb, duracao_segundos, editor
                     FROM   edicoes
-                    WHERE  status           = 'encerrado'
+                    WHERE  fim_edicao       IS NOT NULL
                       AND  duracao_segundos > 60
                       AND  tamanho_arquivo_mb > 0
-                      AND  editor_nome     = %s
+                      AND  editor           = %s
                     ORDER BY inicio_edicao DESC
                     LIMIT 500
                     """,
@@ -55,9 +65,9 @@ def carregar_dados_treino(editor_nome: str = None) -> pd.DataFrame:
             else:
                 cur.execute(
                     """
-                    SELECT tamanho_arquivo_mb, duracao_segundos, editor_nome
+                    SELECT tamanho_arquivo_mb, duracao_segundos, editor
                     FROM   edicoes
-                    WHERE  status           = 'encerrado'
+                    WHERE  fim_edicao       IS NOT NULL
                       AND  duracao_segundos > 60
                       AND  tamanho_arquivo_mb > 0
                     ORDER BY inicio_edicao DESC
@@ -70,7 +80,7 @@ def carregar_dados_treino(editor_nome: str = None) -> pd.DataFrame:
         conn.close()
 
 
-def treinar_modelo(editor_nome: str = None) -> LinearRegression | None:
+def treinar_modelo(editor_nome: str = None):
     """
     Treina um modelo de Regressão Linear por editor (ou global).
     Retorna None se não houver dados suficientes.
@@ -100,14 +110,14 @@ def treinar_modelo(editor_nome: str = None) -> LinearRegression | None:
     return model
 
 
-def salvar_modelo(model: LinearRegression, path: Path = MODEL_PATH):
+def salvar_modelo(model, path: Path = MODEL_PATH):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as f:
         pickle.dump(model, f)
     log.info("Modelo salvo em %s", path)
 
 
-def carregar_modelo(path: Path = MODEL_PATH) -> LinearRegression | None:
+def carregar_modelo(path: Path = MODEL_PATH):
     if path.exists():
         with open(path, "rb") as f:
             return pickle.load(f)
@@ -119,11 +129,11 @@ def carregar_modelo(path: Path = MODEL_PATH) -> LinearRegression | None:
 # ---------------------------------------------------------------------------
 
 # Cache de modelos por editor (evita I/O a cada predição)
-_modelos_cache: dict[str, LinearRegression] = {}
-_modelo_global: LinearRegression | None = None
+_modelos_cache = {}
+_modelo_global = None
 
 
-def prever(editor_nome: str, tamanho_mb: float) -> int | None:
+def prever(editor_nome: str, tamanho_mb: float):
     """
     Retorna a previsão de minutos restantes para concluir a edição.
     Tenta modelo por editor → modelo global → fallback linear simples.
@@ -160,10 +170,10 @@ def prever(editor_nome: str, tamanho_mb: float) -> int | None:
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.get_json(force=True)
-    editor    = data.get("editor", "")
-    tamanho   = float(data.get("tamanho_mb", 0))
-    minutos   = prever(editor, tamanho)
+    data = request.get_json(force=True) or {}
+    editor  = data.get("editor", "")
+    tamanho = float(data.get("tamanho_mb", 0) or 0)
+    minutos = prever(editor, tamanho)
     return jsonify({"editor": editor, "tamanho_mb": tamanho, "minutos": minutos})
 
 

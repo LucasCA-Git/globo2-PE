@@ -2,29 +2,11 @@ import { Ilha } from "@/types/dashboard";
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "Pronto para editar":
-      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/20";
-
-    case "Editando":
+    case "Ocupado":
       return "bg-yellow-500/20 text-yellow-300 border-yellow-500/20";
 
-    case "Editado":
-      return "bg-blue-500/20 text-blue-300 border-blue-500/20";
-
-    case "Gaveta":
-      return "bg-purple-500/20 text-purple-300 border-purple-500/20";
-
-    case "Exibido":
-      return "bg-cyan-500/20 text-cyan-300 border-cyan-500/20";
-
-    case "Exportado":
-      return "bg-orange-500/20 text-orange-300 border-orange-500/20";
-
-    case "Home Office":
-      return "bg-pink-500/20 text-pink-300 border-pink-500/20";
-
-    case "Fora do Turno":
-      return "bg-slate-500/20 text-slate-300 border-slate-500/20";
+    case "Concluido":
+      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/20";
 
     default:
       return "bg-slate-500/20 text-slate-300 border-slate-500/20";
@@ -48,12 +30,10 @@ export default function EditorCard({ ilha }: Props) {
 
             <span
               className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${
-                ilha.status === "Editando"
+                ilha.status === "Ocupado"
                   ? "bg-yellow-400"
-                  : ilha.status === "Pronto para editar"
+                  : ilha.status === "Concluido"
                   ? "bg-emerald-400"
-                  : ilha.status === "Exportado"
-                  ? "bg-orange-400"
                   : "bg-slate-400"
               }`}
             />

@@ -99,36 +99,12 @@ export default function FilterBar({
           Todos os status
         </option>
 
-        <option value="Pronto para editar">
-          Pronto para editar
+        <option value="Ocupado">
+          Ocupado
         </option>
 
-        <option value="Editando">
-          Editando
-        </option>
-
-        <option value="Editado">
-          Editado
-        </option>
-
-        <option value="Gaveta">
-          Gaveta
-        </option>
-
-        <option value="Exibido">
-          Exibido
-        </option>
-
-        <option value="Exportado">
-          Exportado
-        </option>
-
-        <option value="Home Office">
-          Home Office
-        </option>
-
-        <option value="Fora do Turno">
-          Fora do Turno
+        <option value="Concluido">
+          Concluido
         </option>
       </select>
 

@@ -1,13 +1,31 @@
+"""
+agent/monitor.py — Watchdog do Agente de Coleta.
+
+Monitora a pasta `arquivos_teste` (ou o storage real do Avid Media Composer)
+e envia cada evento do sistema de arquivos para o backend via HTTP POST /events.
+
+Convenção de nome de pasta monitorada:
+
+    <PROJETO> <CODIGO> <ILHA>
+    ex: "ANIVERSARIO RECIFE LUC I9"
+        projeto = "ANIVERSARIO RECIFE"
+        codigo  = "LUC"   -> resolvido via usuario_map.USUARIO_MAP
+        ilha    = "I9"    -> "ILHA-09"
+
+Conclusão do projeto: quando existe pelo menos um arquivo dentro da
+subpasta `timeline/` do projeto (padrão real de export do Avid).
+"""
+
 import time
 import os
 import requests
 
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver as Observer  # inotify nao funciona de forma confiavel em /mnt/c (WSL)
 from watchdog.events import FileSystemEventHandler
 
 from usuario_map import resolver_usuario
 
-BACKEND_URL = "http://127.0.0.1:5000/events"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:5000/events")
 
 PASTA_MONITORADA = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -104,12 +122,21 @@ def extrair_info_pasta(caminho_arquivo: str) -> dict:
         except Exception:
             concluido = False
 
+    # Tamanho do arquivo (MB) — usado pela camada de IA para prever o ETC
+    tamanho_mb = 0.0
+    try:
+        if os.path.isfile(abs_arquivo):
+            tamanho_mb = round(os.path.getsize(abs_arquivo) / (1024 * 1024), 2)
+    except OSError:
+        tamanho_mb = 0.0
+
     return {
         "pasta": pasta_nome,
         "ilha": ilha,
         "usuario": usuario,
         "projeto": projeto,
         "concluido": concluido,
+        "tamanho_mb": tamanho_mb,
     }
 
 
@@ -227,6 +254,7 @@ class MonitorHandler(FileSystemEventHandler):
             "usuario": info.get("usuario", ""),
             "projeto": info.get("projeto", ""),
             "status": status,
+            "tamanho_mb": info.get("tamanho_mb", 0),
         }
 
         try:

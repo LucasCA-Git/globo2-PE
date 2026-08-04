@@ -2,7 +2,7 @@
 # start.sh — sobe todo o ecossistema Globo2-PE de uma vez
 # Uso: bash start.sh
 
-PROJECT_DIR="$HOME/Github/globo2-PE"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$PROJECT_DIR/agent"
 VENV="$AGENT_DIR/.venv"
 
