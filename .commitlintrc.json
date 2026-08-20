@@ -1,0 +1,33 @@
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      ["feat", "fix", "refactor", "chore", "docs", "test", "style", "perf", "build", "ci", "revert"]
+    ],
+    "scope-enum": [
+      2,
+      "always",
+      [
+        "backend",
+        "worker",
+        "frontend",
+        "ui",
+        "design",
+        "qa",
+        "data",
+        "db",
+        "ia",
+        "data_ia",
+        "agent",
+        "devops",
+        "docs",
+        "readme"
+      ]
+    ],
+    "scope-empty": [1, "never"],
+    "subject-case": [0],
+    "header-max-length": [2, "always", 90]
+  }
+}
