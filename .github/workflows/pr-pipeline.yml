@@ -1,0 +1,110 @@
+name: PR Pipeline
+
+# Roda em todo Pull Request aberto/atualizado contra main.
+# Reflete a esteira: Code Review (commitlint + CODEOWNERS) -> QA (placeholder ate' existirem testes) -> build.
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ---------------------------------------------------------------------
+  # 1) Commits semanticos (secao 2 do documento de diretrizes)
+  # ---------------------------------------------------------------------
+  commitlint:
+    name: Valida commits semanticos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint commits do PR (Conventional Commits)
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .commitlintrc.json
+
+  # ---------------------------------------------------------------------
+  # 2) Lint por servico
+  # ---------------------------------------------------------------------
+  lint-frontend:
+    name: Lint - frontend (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instala dependencias
+        working-directory: frontend
+        run: npm ci
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+  lint-python:
+    name: Lint - ${{ matrix.service }} (Python)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, agent, data_ia]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instala ruff
+        run: pip install ruff
+      - name: Ruff check (${{ matrix.service }})
+        run: ruff check ${{ matrix.service }} --output-format=github
+
+  # ---------------------------------------------------------------------
+  # 3) Build - garante que nada quebra a imagem/artefato antes do Deploy
+  # ---------------------------------------------------------------------
+  build-frontend:
+    name: Build - frontend (next build)
+    runs-on: ubuntu-latest
+    needs: [lint-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - working-directory: frontend
+        run: npm ci
+      - working-directory: frontend
+        run: npm run build
+
+  build-docker:
+    name: Build - ${{ matrix.service }} (Docker)
+    runs-on: ubuntu-latest
+    needs: [lint-python]
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, data_ia]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem (${{ matrix.service }})
+        run: docker build -t globo2-${{ matrix.service }}:pr-${{ github.event.pull_request.number }} ./${{ matrix.service }}
+
+  # ---------------------------------------------------------------------
+  # 4) QA - PLACEHOLDER
+  # Ainda nao existem testes automatizados no projeto. Este job existe para
+  # deixar o gate de QA visivel na esteira, mas nao bloqueia o PR (continue-on-error).
+  # Quando o subgrupo de QA escrever os primeiros testes (pytest/jest), troque
+  # o "echo" abaixo pelo comando real e remova o continue-on-error.
+  # ---------------------------------------------------------------------
+  qa-placeholder:
+    name: QA (placeholder - sem testes automatizados ainda)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: TODO QA
+        run: |
+          echo "::warning::Nenhum teste automatizado configurado ainda para backend/agent/data_ia/frontend."
+          echo "Este job e' um placeholder da esteira (secao 5 do documento de diretrizes)."
+          echo "Sublider de QA: substitua este step pelos comandos reais de teste (ex.: pytest, npm test) quando estiverem prontos."
