@@ -13,3 +13,4 @@ out/
 
 # modelo de IA treinado localmente
 data_ia/modelo_etc.pkl
+_to_delete
