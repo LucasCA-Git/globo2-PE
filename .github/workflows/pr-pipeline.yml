@@ -1,10 +1,11 @@
 name: PR Pipeline
 
-# Roda em todo Pull Request aberto/atualizado contra main.
+# Roda em todo Pull Request aberto/atualizado contra staging (subgrupo -> staging)
+# ou contra main (staging -> main, release).
 # Reflete a esteira: Code Review (commitlint + CODEOWNERS) -> QA (placeholder ate' existirem testes) -> build.
 on:
   pull_request:
-    branches: [main]
+    branches: [staging, main]
 
 jobs:
   # ---------------------------------------------------------------------
