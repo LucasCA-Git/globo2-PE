@@ -1,0 +1,37 @@
+# CODEOWNERS — mapeia cada parte do repositorio ao sublider responsavel.
+#
+# IMPORTANTE: troque cada "@usuario-xxxx" abaixo pelo @username real do GitHub
+# do sublider (ex.: @LucasCA-Git). Repo pessoal (nao-organizacao) NAO suporta
+# "@org/team" — so aceita usuarios individuais adicionados como colaboradores
+# do repositorio (Settings > Collaborators and teams > Add people).
+# Docs: https://docs.github.com/articles/about-code-owners
+
+# Backend (API Flask + Worker ETL)
+/backend/                      @usuario-backend-lead
+
+# Agente de coleta - responsabilidade compartilhada Backend + DevOps (ver secao 4 do documento)
+/agent/                        @usuario-backend-lead @usuario-devops-lead
+
+# Frontend (Dashboard Next.js)
+/frontend/                     @usuario-frontend-lead
+
+# Design/UX (componentes e padroes visuais dentro do frontend)
+/frontend/components/          @usuario-design-lead @usuario-frontend-lead
+
+# Dados (schema e persistencia)
+/postgres/                     @usuario-dados-lead
+
+# IA (predicao de ETC)
+/data_ia/                      @usuario-ia-lead
+
+# DevOps (orquestracao, infraestrutura, CI/CD)
+/docker-compose.yml            @usuario-devops-lead
+/docker.py                     @usuario-devops-lead
+/start.sh                      @usuario-devops-lead
+/stop.sh                       @usuario-devops-lead
+/redis_config/                 @usuario-devops-lead
+/.github/                      @usuario-devops-lead
+
+# Documentacao
+/README.md                     @usuario-docs-lead
+*.md                           @usuario-docs-lead
