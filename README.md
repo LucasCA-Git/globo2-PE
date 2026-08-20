@@ -447,17 +447,36 @@ Baseado em *Tidy First?* (Kent Beck, O'Reilly): separe sempre mudanças **estrut
 
 O `agent/` (Watchdog de coleta) é responsabilidade compartilhada de Backend + DevOps.
 
+### Fluxo de branches
+
+```
+backend ──┐
+frontend ─┤
+design ───┤
+qa ───────┼──▶  staging  ──▶  main
+dados ────┤     (integração)   (produção)
+ia ───────┤
+devops ───┤
+docs ─────┘
+```
+
+- **`main`** — branch de produção. Só recebe merge vindo de `staging`, sempre via PR.
+- **`staging`** — branch de integração ("semi-original" da main). Recebe os PRs de cada subgrupo, é onde o time valida que as partes funcionam juntas antes de promover pra `main`.
+- **Branches de subgrupo** (`backend`, `frontend`, `design`, `qa`, `dados`, `ia`, `devops`, `docs`) — cada sublíder e seu subgrupo trabalham na branch do próprio grupo (podendo abrir branches de feature a partir dela, ex.: `backend/nome-da-feature`), commitam seguindo o padrão semântico, e abrem PR de volta para `staging` quando a parte estiver pronta.
+
+Fluxo de um PR: `backend` → PR → `staging` (roda o pipeline, sublíder de backend aprova via CODEOWNERS) → depois de validado com os outros subgrupos em `staging`, um PR `staging` → `main` fecha a release.
+
 ### Pipeline de Pull Request
 
-Todo PR contra `main` roda automaticamente (`.github/workflows/pr-pipeline.yml`):
+Todo PR contra `staging` ou `main` roda automaticamente (`.github/workflows/pr-pipeline.yml`):
 
 1. **Commitlint** — valida se os commits seguem o padrão semântico acima.
 2. **Lint** — ESLint no frontend, `ruff` em `backend`, `agent` e `data_ia`.
 3. **Build** — `next build` no frontend, `docker build` de `backend` e `data_ia`.
 4. **QA** — job placeholder até existirem testes automatizados; será promovido a check obrigatório assim que a suite de testes existir.
 
-Aprovação exigida do sublíder dono da área alterada, via `CODEOWNERS`. Template de PR em `.github/pull_request_template.md` traz o checklist de Definition of Done. Passo a passo de configuração (branch protection, CODEOWNERS) em `_pipeline-setup/SETUP-PIPELINE.md`.
+Aprovação exigida do sublíder dono da área alterada, via `CODEOWNERS`. Template de PR em `.github/pull_request_template.md` traz o checklist de Definition of Done. Passo a passo de configuração (branch protection, CODEOWNERS) em `PIPELINE-SETUP.md`.
 
 ### Esteira ágil
 
-Sprints de 2 semanas + quadro Kanban contínuo: `Backlog → Refinamento → Em Desenvolvimento → Code Review → QA → Deploy → Concluído`. Toda issue recebe uma label de subgrupo já no refinamento; o sublíder puxa a tarefa para desenvolvimento e garante aderência às regras acima antes de abrir o PR.
+Sprints de 2 semanas + quadro Kanban contínuo: `Backlog → Refinamento → Em Desenvolvimento → Code Review → QA → Deploy → Concluído`. Toda issue recebe uma label de subgrupo já no refinamento; o sublíder puxa a tarefa para a branch do subgrupo e garante aderência às regras acima antes de abrir o PR para `staging`.
