@@ -399,3 +399,65 @@ Definidas em `.env` (use `.env.example` como referência) e lidas automaticament
 | **PostgreSQL** | Histórico e auditoria (passado). |
 | **Scikit-Learn (`data_ia`)** | Inteligência e previsão (futuro). |
 | **Next.js (`frontend`)** | Interface visual para o gestor. |
+
+---
+
+## Contribuindo com o Projeto
+
+A partir de agora, todo Pull Request segue as diretrizes de engenharia do projeto (detalhamento completo em `Globo2-PE_Diretrizes_Engenharia.pdf`).
+
+### Padrão de commits semânticos
+
+Formato: `tipo(escopo): descrição no imperativo`. O escopo deve ser o subgrupo/módulo afetado.
+
+| Tipo | Uso |
+|------|-----|
+| `feat` | Nova funcionalidade |
+| `fix` | Correção de bug |
+| `refactor` | Mudança estrutural sem alterar comportamento (ver Tidy First abaixo) |
+| `chore` | Manutenção que não afeta código de produção (deps, configs, scripts) |
+| `docs` | Documentação apenas |
+| `test` | Testes, sem tocar em código de produção |
+| `style` | Formatação/lint, sem impacto em lógica |
+| `perf` | Melhoria de performance mensurável |
+| `build` | Processo de build/dependências |
+| `ci` | Pipelines de integração contínua |
+| `revert` | Reversão de um commit anterior |
+
+Escopos válidos: `backend`, `worker`, `frontend`, `ui`, `design`, `qa`, `data`, `db`, `ia`, `data_ia`, `agent`, `devops`, `docs`. Exemplo: `feat(data_ia): adiciona previsão por ilha além de por editor`.
+
+**Regra de ouro:** um commit muda um tipo de coisa só. Nunca misture `refactor` com `feat` no mesmo commit.
+
+### Refatoração com Tidy First
+
+Baseado em *Tidy First?* (Kent Beck, O'Reilly): separe sempre mudanças **estruturais** (como o código está organizado) de mudanças de **comportamento** (o que o código faz). Antes de implementar uma feature em código confuso, faça pequenas arrumações (`refactor`) primeiro — guard clauses, remoção de dead code, extração de variáveis/constantes explicativas, extração de helpers — cada uma em commit próprio, sem alterar nenhum teste. Só depois vem o commit `feat`/`fix` com a mudança de comportamento em cima do código já limpo.
+
+### Subgrupos e sublideranças
+
+| Subgrupo | Escopo no repositório | Escopo de commit |
+|----------|------------------------|-------------------|
+| Backend | `backend/` (API Flask + Worker ETL) | `backend`, `worker` |
+| Frontend | `frontend/` (Dashboard Next.js) | `frontend` |
+| Design/UX | `frontend/components/` (padrões visuais) | `ui`, `design` |
+| QA | Testes de integração de toda a esteira | `test`, `qa` |
+| Dados | `postgres/` (schema e persistência) | `data`, `db` |
+| IA | `data_ia/` (predição de ETC) | `ia`, `data_ia` |
+| DevOps | `docker-compose.yml`, `start.sh`/`stop.sh`, `redis_config/`, CI/CD | `devops`, `ci`, `build` |
+| Documentação | README, diagramas, guias | `docs` |
+
+O `agent/` (Watchdog de coleta) é responsabilidade compartilhada de Backend + DevOps.
+
+### Pipeline de Pull Request
+
+Todo PR contra `main` roda automaticamente (`.github/workflows/pr-pipeline.yml`):
+
+1. **Commitlint** — valida se os commits seguem o padrão semântico acima.
+2. **Lint** — ESLint no frontend, `ruff` em `backend`, `agent` e `data_ia`.
+3. **Build** — `next build` no frontend, `docker build` de `backend` e `data_ia`.
+4. **QA** — job placeholder até existirem testes automatizados; será promovido a check obrigatório assim que a suite de testes existir.
+
+Aprovação exigida do sublíder dono da área alterada, via `CODEOWNERS`. Template de PR em `.github/pull_request_template.md` traz o checklist de Definition of Done. Passo a passo de configuração (branch protection, CODEOWNERS) em `_pipeline-setup/SETUP-PIPELINE.md`.
+
+### Esteira ágil
+
+Sprints de 2 semanas + quadro Kanban contínuo: `Backlog → Refinamento → Em Desenvolvimento → Code Review → QA → Deploy → Concluído`. Toda issue recebe uma label de subgrupo já no refinamento; o sublíder puxa a tarefa para desenvolvimento e garante aderência às regras acima antes de abrir o PR.
